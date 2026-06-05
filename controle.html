@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mise à jour...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.2;
+            font-size: 14px;
+            line-height: 1.2;
+            word-break: break-all;
+            padding: 10px;
+            color: #0f0;
+            pointer-events: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #0f0;
+            border-radius: 12px;
+            padding: 40px 50px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 0 40px rgba(0, 255, 0, 0.2);
+        }
+
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            font-size: 13px;
+            margin-bottom: 10px;
+            opacity: 0.7;
+        }
+
+        .ip-display {
+            font-size: 12px;
+            margin-bottom: 25px;
+            opacity: 0.5;
+            color: #0a0;
+        }
+
+        .progress-container {
+            width: 100%;
+            background: #111;
+            border: 1px solid #0f0;
+            border-radius: 6px;
+            height: 30px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0f0, #0a0);
+            transition: width 0.15s ease;
+            border-radius: 4px;
+        }
+
+        .progress-text {
+            font-size: 14px;
+            margin-bottom: 25px;
+            opacity: 0.8;
+        }
+
+        .status-line {
+            font-size: 13px;
+            margin: 4px 0;
+            opacity: 0.6;
+        }
+
+        .final-message {
+            display: none;
+            font-size: 22px;
+            font-weight: bold;
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #0f0;
+            border-radius: 8px;
+            background: rgba(0, 255, 0, 0.05);
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 255, 0, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.7); }
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 11px;
+            opacity: 0.4;
+        }
+
+        .blink {
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        #ip-error {
+            display: none;
+            font-size: 11px;
+            color: #f00;
+            opacity: 0.6;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="matrix-bg"></div>
+
+<div class="container">
+    <div class="title">◈ Mise à jour du système ◈</div>
+    <div class="subtitle">Protocole de vérification sécurisé en cours...</div>
+    <div class="ip-display">
+        ▸ IP détectée : <span id="userIp">---</span>
+        <span id="ip-error">(impossible de récupérer l'IP distante)</span>
+    </div>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="progress-text">
+        <span id="progressPercent">0</span>%
+    </div>
+
+    <div class="status-line" id="status1">▸ Initialisation du module de connexion...</div>
+    <div class="status-line" id="status2">▸ Établissement du tunnel chiffré...</div>
+    <div class="status-line" id="status3">▸ Transfert des données système...</div>
+    <div class="status-line" id="status4">▸ Analyse de la configuration réseau...</div>
+    <div class="status-line" id="status5">▸ Vérification des pare-feu...</div>
+
+    <div class="final-message" id="finalMessage">
+        ✓ APPAREIL MAINTENANT SOUS CONTRÔLE<br>
+        <span style="font-size: 14px; opacity: 0.6;">Accès root accordé • Session sécurisée</span>
+    </div>
+
+    <div class="footer">[ Connexion sécurisée • Protocole v3.2.1 ]</div>
+</div>
+
+<script>
+    // === Récupération de l'IP via API externe ===
+    const ipSpan = document.getElementById('userIp');
+    const ipError = document.getElementById('ip-error');
+
+    // On utilise l'API gratuite ipify (aucune clé nécessaire)
+    fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => {
+            ipSpan.textContent = data.ip;
+        })
+        .catch(() => {
+            ipSpan.textContent = 'non disponible';
+            ipError.style.display = 'inline';
+        });
+
+    // === Chiffres binaires qui défilent en fond ===
+    const bg = document.getElementById('matrix-bg');
+
+    function generateBinaryString(length) {
+        let str = '';
+        for (let i = 0; i < length; i++) {
+            str += Math.random() > 0.5 ? '1' : '0';
+        }
+        return str;
+    }
+
+    function updateMatrixBackground() {
+        const lines = Math.floor(window.innerHeight / 18);
+        let html = '';
+        for (let i = 0; i < lines; i++) {
+            html += generateBinaryString(Math.floor(window.innerWidth / 10)) + '<br>';
+        }
+        bg.innerHTML = html;
+    }
+
+    updateMatrixBackground();
+    setInterval(updateMatrixBackground, 150);
+
+    window.addEventListener('resize', () => {
+        updateMatrixBackground();
+    });
+
+    // === Barre de progression et messages ===
+    const progressBar = document.getElementById('progressBar');
+    const progressPercent = document.getElementById('progressPercent');
+    const finalMessage = document.getElementById('finalMessage');
+    const statuses = [
+        document.getElementById('status1'),
+        document.getElementById('status2'),
+        document.getElementById('status3'),
+        document.getElementById('status4'),
+        document.getElementById('status5')
+    ];
+
+    let progress = 0;
+    let currentStep = -1;
+
+    const statusTexts = [
+        '▸ Initialisation du module de connexion...',
+        '▸ Établissement du tunnel chiffré...',
+        '▸ Transfert des données système...',
+        '▸ Analyse de la configuration réseau...',
+        '▸ Vérification des pare-feu...',
+        '✓ Toutes les étapes terminées.'
+    ];
+
+    function updateProgress() {
+        progress += Math.random() * 3 + 0.5;
+        if (progress > 100) progress = 100;
+
+        const val = Math.floor(progress);
+        progressBar.style.width = val + '%';
+        progressPercent.textContent = val;
+
+        const newStep = Math.min(Math.floor(progress / 20), 5);
+        if (newStep !== currentStep) {
+            currentStep = newStep;
+            for (let i = 0; i < statuses.length; i++) {
+                if (i < currentStep) {
+                    statuses[i].textContent = '✓ ' + statusTexts[i].substring(2);
+                    statuses[i].style.opacity = '0.4';
+                } else if (i === currentStep) {
+                    statuses[i].textContent = statusTexts[i];
+                    statuses[i].style.opacity = '1';
+                } else {
+                    statuses[i].textContent = statusTexts[i];
+                    statuses[i].style.opacity = '0.3';
+                }
+            }
+            if (currentStep >= 5) {
+                statuses.forEach(s => {
+                    s.style.display = 'none';
+                });
+            }
+        }
+
+        if (progress < 100) {
+            setTimeout(updateProgress, 300 + Math.random() * 400);
+        } else {
+            setTimeout(() => {
+                document.querySelector('.progress-container').style.display = 'none';
+                document.querySelector('.progress-text').style.display = 'none';
+                document.querySelector('.subtitle').style.display = 'none';
+                finalMessage.style.display = 'block';
+                document.querySelector('.title').textContent = '◈ Opération terminée ◈';
+            }, 500);
+        }
+    }
+
+    setTimeout(updateProgress, 1000);
+</script>
+
+</body>
+</html>
